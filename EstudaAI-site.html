@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EstudaAI — Resolva Qualquer Questão</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#080b12;--bg2:#0d1120;--surface:#131826;--surface2:#1a2035;--border:#252d45;--border2:#2e3a58;--gold:#e8c46a;--gold2:#f5d98b;--gold-dim:rgba(232,196,106,.12);--text:#dde2f0;--text2:#a0aac0;--muted:#5a6480;--green:#52d0a0;--red:#f07070;--blue:#6fa8f5;--purple:#b088f5;--orange:#f5a56a}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(232,196,106,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(111,168,245,.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(8,11,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.nav-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),#b8962a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 14px rgba(232,196,106,.25)}
+.nav-logo-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold)}
+.nav-status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:all .3s}
+.dot.online{background:var(--green);box-shadow:0 0 7px rgba(82,208,160,.5)}
+.dot.offline{background:var(--red)}
+.dot.checking{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#statusText b{color:var(--text)}
+
+.hero{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:48px 20px 28px;text-align:center}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);line-height:1.15;margin-bottom:12px}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero p{font-size:14px;color:var(--text2);max-width:440px;margin:0 auto 24px;line-height:1.7}
+
+.subjects{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:24px}
+.s-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.s-chip:hover{border-color:var(--gold);color:var(--gold)}
+.s-chip.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);font-weight:600}
+
+.card{position:relative;z-index:1;max-width:720px;margin:0 auto 32px;padding:0 20px}
+.card-inner{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 16px 50px rgba(0,0,0,.5)}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.9px}
+.pasted-badge{display:none;align-items:center;gap:6px;background:rgba(82,208,160,.1);border:1px solid rgba(82,208,160,.25);border-radius:6px;padding:4px 9px;font-size:11px;color:var(--green)}
+.pasted-badge.visible{display:flex}
+.pasted-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0}
+textarea{width:100%;min-height:110px;background:transparent;border:none;padding:16px 18px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;resize:none;outline:none}
+textarea::placeholder{color:var(--muted)}
+.card-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;align-items:center}
+.btn-solve{flex:1;padding:10px 18px;background:linear-gradient(135deg,var(--gold),#c4973a);border:none;border-radius:9px;color:#0a0c12;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-solve:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 5px 18px rgba(232,196,106,.25)}
+.btn-solve:active{transform:none}
+.btn-solve:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sec{padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-sec:hover{border-color:var(--red);color:var(--red)}
+.char-ct{font-size:11px;color:var(--muted);margin-left:auto}
+
+.error-box{max-width:720px;margin:0 auto 16px;padding:0 20px;display:none}
+.error-box.visible{display:block}
+.error-inner{background:rgba(240,112,112,.08);border:1px solid rgba(240,112,112,.25);border-radius:11px;padding:12px 16px;color:var(--red);font-size:13px;line-height:1.6}
+.error-inner a{color:var(--gold)}
+
+.result-wrap{position:relative;z-index:1;max-width:720px;margin:0 auto 48px;padding:0 20px;display:none}
+.result-wrap.visible{display:block}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 16px 50px rgba(0,0,0,.5)}
+.result-top{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.result-subject-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 9px;border-radius:5px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(232,196,106,.2)}
+.source-tag{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.source-tag.local{background:rgba(82,208,160,.1);color:var(--green);border:1px solid rgba(82,208,160,.2)}
+.source-tag.groq{background:rgba(176,136,245,.1);color:var(--purple);border:1px solid rgba(176,136,245,.2)}
+.result-actions{margin-left:auto;display:flex;gap:6px}
+.r-btn{background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 10px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.r-btn:hover{border-color:var(--gold);color:var(--gold)}
+.skip-btn{border-color:rgba(245,165,106,.4)!important;color:var(--orange)!important}
+.skip-btn:hover{background:rgba(245,165,106,.08)!important}
+.loading{display:none;padding:20px;align-items:center;gap:10px}
+.loading.visible{display:flex}
+.l-dots span{display:inline-block;width:7px;height:7px;background:var(--gold);border-radius:50%;margin:0 2px;animation:ldot 1.2s infinite;opacity:.5}
+.l-dots span:nth-child(2){animation-delay:.2s}
+.l-dots span:nth-child(3){animation-delay:.4s}
+@keyframes ldot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px);opacity:1}}
+.l-text{font-size:13px;color:var(--text2)}
+.result-body{padding:20px;font-size:14px;line-height:1.8;color:var(--text);max-height:550px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.result-body h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.result-body h3:first-child{margin-top:0}
+.result-body strong{color:var(--gold2);font-weight:600}
+.result-body em{color:var(--blue)}
+.answer-box{background:rgba(82,208,160,.06);border:1px solid rgba(82,208,160,.2);border-radius:10px;padding:12px 16px;margin-top:12px;color:var(--green);font-weight:500}
+.cursor{display:inline-block;width:2px;height:14px;background:var(--gold);margin-left:3px;vertical-align:middle;animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.settings-wrap{max-width:720px;margin:0 auto 36px;padding:0 20px}
+details{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+summary{padding:13px 18px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;list-style:none;display:flex;align-items:center;justify-content:space-between;user-select:none}
+summary::after{content:'▾';color:var(--muted);transition:transform .2s}
+details[open] summary::after{transform:rotate(180deg)}
+.s-body{padding:16px 18px;border-top:1px solid var(--border)}
+.s-row{display:flex;gap:7px;align-items:center;margin-bottom:9px}
+.s-lbl{font-size:12px;color:var(--text2);min-width:90px}
+.s-inp{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none}
+.s-inp:focus{border-color:var(--gold)}
+.s-inp::placeholder{color:var(--muted)}
+.btn-sv{padding:7px 13px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--green);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-sv:hover{border-color:var(--green)}
+.s-hint{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.s-hint a{color:var(--gold);text-decoration:none}
+.sv-ok{font-size:11px;color:var(--green);margin-top:5px;display:none}
+.sv-ok.visible{display:block}
+
+footer{text-align:center;padding:22px;font-size:11px;color:var(--muted);border-top:1px solid var(--border)}
+footer a{color:var(--gold);text-decoration:none}
+
+@media(max-width:600px){nav{padding:10px 14px}.hero{padding:32px 14px 20px}.card,.result-wrap,.settings-wrap,.error-box{padding:0 12px}.card-foot{flex-wrap:wrap}.btn-solve{width:100%;order:-1}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">📚</div>
+    <span class="nav-logo-text">EstudaAI</span>
+  </a>
+  <div class="nav-status">
+    <div class="dot checking" id="dot"></div>
+    <span id="statusText">Verificando…</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Resolva qualquer questão<br/>com <em>Inteligência Artificial</em></h1>
+  <p>Matemática, Português, Ciências, História e muito mais — respostas passo a passo, grátis.</p>
+  <div class="subjects" id="subjects">
+    <button class="s-chip active" data-subject="auto">🔍 Auto</button>
+    <button class="s-chip" data-subject="matematica">➕ Matemática</button>
+    <button class="s-chip" data-subject="portugues">📖 Português</button>
+    <button class="s-chip" data-subject="ciencias">🔬 Ciências</button>
+    <button class="s-chip" data-subject="historia">🏛️ História</button>
+    <button class="s-chip" data-subject="geografia">🌎 Geografia</button>
+    <button class="s-chip" data-subject="fisica">⚡ Física</button>
+    <button class="s-chip" data-subject="quimica">🧪 Química</button>
+    <button class="s-chip" data-subject="biologia">🧬 Biologia</button>
+    <button class="s-chip" data-subject="ingles">🇬🇧 Inglês</button>
+    <button class="s-chip" data-subject="filosofia">💭 Filosofia</button>
+    <button class="s-chip" data-subject="sociologia">👥 Sociologia</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-inner">
+    <div class="card-head">
+      <span class="card-title">Sua Questão</span>
+      <div class="pasted-badge" id="pastedBadge">📌 Enviado pela extensão <button class="pasted-clear" id="pastedClear">✕</button></div>
+    </div>
+    <textarea id="questionInput" placeholder="Digite ou cole sua questão aqui…&#10;&#10;💡 Use a extensão EstudaAI no Chrome para enviar questões direto desta página!" rows="5"></textarea>
+    <div class="card-foot">
+      <button class="btn-solve" id="solveBtn">⚡ Resolver Agora</button>
+      <button class="btn-sec" id="clearBtn">🗑️ Limpar</button>
+      <span class="char-ct" id="charCt">0 car.</span>
+    </div>
+  </div>
+</div>
+
+<div class="error-box" id="errorBox"><div class="error-inner" id="errorInner"></div></div>
+
+<div class="result-wrap" id="resultWrap">
+  <div class="result-card">
+    <div class="result-top">
+      <span class="result-subject-tag" id="resultSubject">Resposta</span>
+      <span class="source-tag local" id="sourceTag">● Local</span>
+      <div class="result-actions">
+        <button class="r-btn skip-btn" id="skipBtn">⏩ Pular para resposta</button>
+        <button class="r-btn" id="copyBtn">📋 Copiar</button>
+      </div>
+    </div>
+    <div class="loading" id="loading"><div class="l-dots"><span></span><span></span><span></span></div><span class="l-text" id="loadingText">Pensando…</span></div>
+    <div class="result-body" id="resultBody"></div>
+  </div>
+</div>
+
+<div class="settings-wrap">
+  <details id="settingsEl">
+    <summary>⚙️ Configurações</summary>
+    <div class="s-body">
+      <div class="s-row">
+        <span class="s-lbl">🖥️ Ollama URL</span>
+        <input class="s-inp" type="text" id="ollamaIn" placeholder="http://localhost:11434"/>
+        <button class="btn-sv" id="saveOllama">Salvar</button>
+      </div>
+      <div class="s-hint">Para acesso remoto via ngrok: cole o URL público aqui.</div>
+      <div class="s-row" style="margin-top:10px">
+        <span class="s-lbl">🔑 Chave Groq</span>
+        <input class="s-inp" type="password" id="groqIn" placeholder="gsk_… (grátis em groq.com)"/>
+        <button class="btn-sv" id="saveGroq">Salvar</button>
+      </div>
+      <div class="s-hint">Gratuito em <a href="https://console.groq.com" target="_blank">console.groq.com</a> — só precisa de email. Usado quando Ollama está offline.</div>
+      <div class="sv-ok" id="svOk">✓ Salvo com sucesso!</div>
+    </div>
+  </details>
+</div>
+
+<footer>EstudaAI · Powered by Ollama &amp; Groq · Código aberto · Grátis para sempre</footer>
+
+<script>
+const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL='llama-3.1-8b-instant';
+const DEFAULT_OLLAMA='http://localhost:11434';
+
+const SUBJECT_PROMPTS={
+  auto:`Você é um professor especialista rigoroso em todas as matérias escolares brasileiras. Identifique a matéria automaticamente e resolva com máxima precisão.`,
+  matematica:`Você é um professor de Matemática altamente preciso. Resolva passo a passo. Verifique sua resposta final antes de apresentá-la.`,
+  portugues:`Você é um professor de Língua Portuguesa do currículo brasileiro. Analise gramática, morfologia, sintaxe, semântica e interpretação com rigor.`,
+  ciencias:`Você é um professor de Ciências com domínio de Química, Física e Biologia. ATENÇÃO CRÍTICA: Na tabela periódica, PERÍODOS são linhas HORIZONTAIS — elementos do mesmo PERÍODO têm o MESMO NÚMERO DE CAMADAS ELETRÔNICAS. GRUPOS/FAMÍLIAS são colunas verticais — elementos do mesmo GRUPO têm o mesmo número de ELÉTRONS DE VALÊNCIA. Não confunda nunca estes conceitos.`,
+  historia:`Você é um professor de História. Contextualize com datas, personagens e relações de causa-consequência. Cubra da pré-história à contemporaneidade.`,
+  geografia:`Você é um professor de Geografia física e humana. Domine cartografia, climas, biomas, geopolítica e urbanização.`,
+  fisica:`Você é um professor de Física rigoroso. Use fórmulas corretas, mostre unidades em cada passo, verifique dimensionalmente sua resposta.`,
+  quimica:`Você é um professor de Química rigoroso. PERÍODOS da tabela = mesmas camadas eletrônicas. GRUPOS = mesmos elétrons de valência. Balanceie equações. Use nomenclatura IUPAC.`,
+  biologia:`Você é um professor de Biologia rigoroso. Domine célula, genética, evolução, ecologia e fisiologia humana com terminologia científica precisa.`,
+  ingles:`You are a precise English teacher for Brazilian students. Answer in both English and Portuguese (pt-BR). Explain grammar rules clearly.`,
+  filosofia:`Você é um professor de Filosofia. Identifique corrente filosófica, período histórico e pensadores relevantes com precisão.`,
+  sociologia:`Você é um professor de Sociologia. Relacione questões a pensadores (Marx, Durkheim, Weber), movimentos sociais e fenômenos contemporâneos.`,
+};
+const SUBJECT_NAMES={auto:'Auto',matematica:'Matemática',portugues:'Português',ciencias:'Ciências',historia:'História',geografia:'Geografia',fisica:'Física',quimica:'Química',biologia:'Biologia',ingles:'Inglês',filosofia:'Filosofia',sociologia:'Sociologia'};
+const FORMAT=`\n\nResponda em português brasileiro (exceto Inglês). Use EXATAMENTE:\n\n📌 Identificação: [conceito]\n\n📝 Resolução:\n[passo a passo]\n\n✅ Resposta Final:\n[resposta objetiva]\n\n💡 Dica Extra:\n[conceito-chave]`;
+
+let sel='auto',ollamaOk=false,buf='',streaming=false,skip=false,ctrl=null;
+
+function getOllama(){return localStorage.getItem('ea_ollama')||DEFAULT_OLLAMA}
+function getGroq(){return localStorage.getItem('ea_groq')||''}
+
+document.getElementById('ollamaIn').value=getOllama();
+document.getElementById('groqIn').value=getGroq();
+document.getElementById('saveOllama').onclick=()=>{localStorage.setItem('ea_ollama',document.getElementById('ollamaIn').value||DEFAULT_OLLAMA);sv();checkOllama()};
+document.getElementById('saveGroq').onclick=()=>{localStorage.setItem('ea_groq',document.getElementById('groqIn').value);sv()};
+function sv(){const e=document.getElementById('svOk');e.classList.add('visible');setTimeout(()=>e.classList.remove('visible'),2500)}
+
+async function checkOllama(){
+  const dot=document.getElementById('dot'),txt=document.getElementById('statusText');
+  dot.className='dot checking';txt.innerHTML='Verificando…';
+  try{
+    const r=await fetch(`${getOllama()}/api/tags`,{signal:AbortSignal.timeout(3000)});
+    if(!r.ok)throw new Error();
+    dot.className='dot online';txt.innerHTML='<b>Ollama</b> online ✓';ollamaOk=true;
+  }catch{
+    dot.className='dot offline';
+    ollamaOk=false;
+    txt.innerHTML=getGroq()?'Ollama offline · <b>Groq ☁️</b> ativo':'Ollama offline · <a href="#settingsEl" style="color:var(--gold)">configurar Groq</a>';
+  }
+}
+checkOllama();setInterval(checkOllama,30000);
+
+// URL params from extension
+const p=new URLSearchParams(location.search);
+const autoQ=p.get('q'),autoS=p.get('s');
+if(autoQ){
+  document.getElementById('questionInput').value=decodeURIComponent(autoQ);
+  document.getElementById('pastedBadge').classList.add('visible');
+  if(autoS){document.querySelectorAll('.s-chip').forEach(c=>{c.classList.toggle('active',c.dataset.subject===autoS);if(c.dataset.subject===autoS)sel=autoS})}
+  setTimeout(()=>document.getElementById('solveBtn').click(),700);
+}
+
+document.querySelectorAll('.s-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.s-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');sel=c.dataset.subject}));
+document.getElementById('pastedClear').onclick=()=>{document.getElementById('pastedBadge').classList.remove('visible');history.replaceState(null,'',location.pathname)};
+const qi=document.getElementById('questionInput');
+qi.addEventListener('input',()=>document.getElementById('charCt').textContent=qi.value.length+' car.');
+document.getElementById('clearBtn').onclick=()=>{qi.value='';document.getElementById('charCt').textContent='0 car.';document.getElementById('resultWrap').classList.remove('visible');document.getElementById('resultBody').innerHTML='';hideErr()};
+
+document.getElementById('solveBtn').onclick=async()=>{
+  const q=qi.value.trim();
+  if(!q){showErr('Escreva uma questão primeiro!');return}
+  if(!ollamaOk&&!getGroq()){showErr('Ollama offline e sem chave Groq. Configure nas ⚙️ Configurações.');document.getElementById('settingsEl').open=true;return}
+  hideErr();await solve(q);
+};
+
+document.getElementById('skipBtn').onclick=()=>{
+  if(streaming){skip=true;ctrl?.abort()}
+  else{const hs=[...document.getElementById('resultBody').querySelectorAll('h3')];const a=hs.find(h=>h.textContent.includes('Resposta'));if(a)a.scrollIntoView({behavior:'smooth',block:'start'})}
+};
+
+async function solve(q){
+  const btn=document.getElementById('solveBtn'),rw=document.getElementById('resultWrap'),rb=document.getElementById('resultBody'),ld=document.getElementById('loading'),lt=document.getElementById('loadingText'),st=document.getElementById('sourceTag'),sj=document.getElementById('resultSubject');
+  btn.disabled=true;btn.innerHTML='⏳ Pensando…';
+  skip=false;buf='';streaming=true;
+  rw.classList.add('visible');rb.innerHTML='';ld.classList.add('visible');
+  sj.textContent=SUBJECT_NAMES[sel]||'Resposta';
+  rw.scrollIntoView({behavior:'smooth',block:'start'});
+  const useOllama=ollamaOk;
+  st.className='source-tag '+(useOllama?'local':'groq');
+  st.textContent=useOllama?'● Local':'☁️ Groq';
+  lt.textContent=useOllama?'Ollama pensando…':'Groq pensando…';
+  const sys=SUBJECT_PROMPTS[sel]+FORMAT;
+  try{
+    if(useOllama)await doOllama(q,sys,rb,ld);
+    else await doGroq(q,sys,rb,ld);
+  }catch(e){if(e.name!=='AbortError'){ld.classList.remove('visible');rw.classList.remove('visible');showErr('Erro: '+e.message)}}
+  streaming=false;btn.disabled=false;btn.innerHTML='⚡ Resolver Agora';
+  renderFinal(rb);
+}
+
+async function doOllama(q,sys,rb,ld){
+  ctrl=new AbortController();
+  const r=await fetch(`${getOllama()}/api/chat`,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama3.2',stream:true,messages:[{role:'system',content:sys},{role:'user',content:q}]})});
+  if(!r.ok)throw new Error(`Ollama ${r.status}`);
+  ld.classList.remove('visible');
+  await readStream(r,rb,l=>{try{return JSON.parse(l)?.message?.content||''}catch{return ''}});
+}
+async function doGroq(q,sys,rb,ld){
+  ctrl=new AbortController();
+  const r=await fetch(GROQ_URL,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+getGroq()},body:JSON.stringify({model:GROQ_MODEL,stream:true,max_tokens:1200,messages:[{role:'system',content:sys},{role:'user',content:q}]})});
+  if(!r.ok){const e=await r.json();throw new Error(e.error?.message||`Groq ${r.status}`)}
+  ld.classList.remove('visible');
+  await readStream(r,rb,l=>{const d=l.replace(/^data: /,'').trim();if(!d||d==='[DONE]')return'';try{return JSON.parse(d).choices?.[0]?.delta?.content||''}catch{return''}});
+}
+async function readStream(res,el,fn){
+  const rdr=res.body.getReader(),dec=new TextDecoder();let b='';
+  while(true){
+    const{done,v}=await rdr.read().then(x=>x);
+    if(done)break;
+    b+=dec.decode(v,{stream:true});
+    const ls=b.split('\n');b=ls.pop();
+    for(const l of ls){if(!l.trim())continue;const t=fn(l);if(t){buf+=t;renderS(el)}}
+    if(skip){rdr.cancel();break}
+  }
+}
+function renderS(el){el.innerHTML=fmt(skip?extractAns(buf):buf)+'<span class="cursor"></span>';el.scrollTop=el.scrollHeight}
+function renderFinal(el){el.innerHTML=fmt(skip?extractAns(buf):buf)}
+function extractAns(t){const m=t.match(/✅ Resposta Final[:\s]*([\s\S]*?)(?:💡|$)/);return m?'✅ Resposta Final:\n'+m[1].trim():t}
+function fmt(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/📌 Identificação[:\s]*/g,'<h3>📌 Identificação</h3>')
+    .replace(/📝 Resolução[:\s]*/g,'<h3>📝 Resolução</h3>')
+    .replace(/✅ Resposta Final[:\s]*/g,'<h3>✅ Resposta Final</h3>')
+    .replace(/💡 Dica Extra[:\s]*/g,'<h3>💡 Dica Extra</h3>')
+    .replace(/\n/g,'<br/>');
+}
+document.getElementById('copyBtn').onclick=()=>{navigator.clipboard.writeText(document.getElementById('resultBody').innerText).then(()=>{const b=document.getElementById('copyBtn');b.textContent='✓ Copiado!';setTimeout(()=>b.textContent='📋 Copiar',2000)})};
+function showErr(m){document.getElementById('errorInner').innerHTML=m;document.getElementById('errorBox').classList.add('visible')}
+function hideErr(){document.getElementById('errorBox').classList.remove('visible')}
+</script>
+</body>
+</html>
